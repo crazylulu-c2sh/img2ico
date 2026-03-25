@@ -11,8 +11,13 @@ if (!fileInput || !sizesInput || !convertButton || !statusText) {
   throw new Error("필수 DOM 요소를 찾을 수 없습니다.");
 }
 
+const fileInputEl = fileInput;
+const sizesInputEl = sizesInput;
+const convertButtonEl = convertButton;
+const statusParagraph = statusText;
+
 function setStatus(message: string): void {
-  statusText.textContent = message;
+  statusParagraph.textContent = message;
 }
 
 function parseSizes(raw: string): number[] {
@@ -125,7 +130,7 @@ async function buildPngChunkFromDecoded(source: DecodedImage, size: number): Pro
 }
 
 function triggerDownload(data: Uint8Array, filename: string): void {
-  const blob = new Blob([data], { type: "image/x-icon" });
+  const blob = new Blob([new Uint8Array(data)], { type: "image/x-icon" });
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
   anchor.href = url;
@@ -137,7 +142,7 @@ function triggerDownload(data: Uint8Array, filename: string): void {
 function assignFileToInput(file: File): void {
   const dt = new DataTransfer();
   dt.items.add(file);
-  fileInput.files = dt.files;
+  fileInputEl.files = dt.files;
 }
 
 if (dropZone) {
@@ -159,21 +164,21 @@ if (dropZone) {
   });
 }
 
-fileInput.addEventListener("change", () => {
-  const file = fileInput.files?.[0];
+fileInputEl.addEventListener("change", () => {
+  const file = fileInputEl.files?.[0];
   if (file) {
     setStatus(`선택됨: ${file.name}`);
   }
 });
 
-convertButton.addEventListener("click", async () => {
+convertButtonEl.addEventListener("click", async () => {
   try {
-    const file = fileInput.files?.[0];
+    const file = fileInputEl.files?.[0];
     if (!file) {
       throw new Error("먼저 이미지를 선택하세요.");
     }
     setStatus("변환 중...");
-    const sizes = parseSizes(sizesInput.value);
+    const sizes = parseSizes(sizesInputEl.value);
     const decoded = await decodeImageFile(file);
     try {
       const chunks = await Promise.all(sizes.map((size) => buildPngChunkFromDecoded(decoded, size)));
