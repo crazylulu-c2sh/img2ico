@@ -62,7 +62,8 @@ pnpm dev
 
 ## 라이선스
 
-- 배포용 라이선스 고지: [`LICENSES.md`](./LICENSES.md)
+- 프로젝트 라이선스: [`LICENSE`](./LICENSE)
+- 배포용 서드파티 라이선스 고지: [`LICENSES.md`](./LICENSES.md)
 
 ## AI 기여(개발 보조) 고지
 
