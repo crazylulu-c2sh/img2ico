@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>img2ico</title>
+  </head>
+  <body>
+    <main class="container">
+      <h1>img2ico</h1>
+      <p>
+        브라우저가 디코드할 수 있는 이미지를 파비콘용 멀티 해상도 ICO로 변환합니다. (PNG, JPEG, WebP, GIF, BMP, SVG,
+        AVIF, HEIC 등은 브라우저·OS에 따라 다릅니다.)
+      </p>
+      <div id="dropZone" class="drop-zone" tabindex="0" aria-label="이미지를 여기에 놓기">
+        <label class="input-group">
+          <span>이미지 선택 (모든 파일 허용)</span>
+          <input id="fileInput" type="file" accept="*/*" />
+        </label>
+        <p class="hint">또는 파일을 이 영역으로 드래그해 놓으세요.</p>
+      </div>
+      <label class="input-group">
+        <span>해상도 목록 (쉼표 구분)</span>
+        <input id="sizesInput" type="text" value="16,32,48,256" />
+      </label>
+      <button id="convertButton" type="button">ICO 생성</button>
+      <p id="statusText" aria-live="polite"></p>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

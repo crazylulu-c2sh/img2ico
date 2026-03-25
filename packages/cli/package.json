@@ -1,0 +1,27 @@
+{
+  "name": "@img2ico/cli",
+  "version": "0.1.0",
+  "type": "module",
+  "bin": {
+    "img2ico": "dist/index.js"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@img2ico/core": "workspace:*",
+    "commander": "^13.1.0",
+    "sharp": "^0.33.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.14",
+    "typescript": "^5.8.2",
+    "vitest": "^3.0.9"
+  }
+}

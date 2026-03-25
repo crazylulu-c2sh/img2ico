@@ -1,0 +1,16 @@
+node_modules
+dist
+coverage
+*.log
+
+# OS
+.DS_Store
+
+# Build/Test cache
+.vite
+*.tsbuildinfo
+
+# Local environment files
+.env
+.env.local
+.env.*.local
