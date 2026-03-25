@@ -1,0 +1,11 @@
+GNU GENERAL PUBLIC LICENSE
+Version 3, 29 June 2007
+
+This repository includes LGPL-3.0-or-later third-party components.
+For LGPL v3 compliance context, the GNU GPL v3 text is referenced here.
+
+Canonical full text:
+https://www.gnu.org/licenses/gpl-3.0.txt
+
+If you need the verbatim GPL v3 text bundled in release artifacts,
+include the canonical text from the URL above during release packaging.
