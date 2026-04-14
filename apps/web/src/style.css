@@ -16,6 +16,19 @@ body {
   gap: 12px;
 }
 
+.title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  width: 100%;
+  gap: 8px 1rem;
+}
+
+.title-row h1 {
+  margin: 0;
+  line-height: 1.15;
+}
+
 .input-group {
   display: grid;
   gap: 8px;
@@ -42,4 +55,15 @@ button {
   margin: 8px 0 0;
   font-size: 13px;
   opacity: 0.85;
+}
+
+.repo-link {
+  margin: 0;
+  margin-inline-start: auto;
+  font-size: 14px;
+}
+
+.repo-link a {
+  color: LinkText;
+  opacity: 0.9;
 }
