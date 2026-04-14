@@ -21,23 +21,25 @@ pnpm install
 
 ## CLI 사용법
 
+아래 `node` 예시는 **저장소 루트**(클론한 프로젝트 최상위 디렉터리)에서 실행한다고 가정합니다.
+
 기본 크기 세트(`16,32,48,256`)로 변환:
 
 ```bash
 pnpm --filter @img2ico/cli build
-node /Users/crazylulu/dev/img2ico/packages/cli/dist/index.js /absolute/path/to/input.png -o /absolute/path/to/favicon.ico
+node packages/cli/dist/index.js ./path/to/input.png -o ./path/to/favicon.ico
 ```
 
 크기 직접 지정:
 
 ```bash
-node /Users/crazylulu/dev/img2ico/packages/cli/dist/index.js /absolute/path/to/input.bmp -o /absolute/path/to/favicon.ico --sizes 16,32,64,128,256
+node packages/cli/dist/index.js ./path/to/input.bmp -o ./path/to/favicon.ico --sizes 16,32,64,128,256
 ```
 
 표준 입력에서 이미지를 받을 수 있습니다 (`-`):
 
 ```bash
-cat ./photo.avif | node /Users/crazylulu/dev/img2ico/packages/cli/dist/index.js - -o /absolute/path/to/favicon.ico
+cat ./photo.avif | node packages/cli/dist/index.js - -o ./path/to/favicon.ico
 ```
 
 ## 웹 사용법
