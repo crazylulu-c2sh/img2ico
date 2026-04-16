@@ -6,8 +6,10 @@ const sizesInput = document.querySelector<HTMLInputElement>("#sizesInput");
 const convertButton = document.querySelector<HTMLButtonElement>("#convertButton");
 const statusText = document.querySelector<HTMLParagraphElement>("#statusText");
 const dropZone = document.querySelector<HTMLElement>("#dropZone");
+const previewWrap = document.querySelector<HTMLElement>("#previewWrap");
+const previewImage = document.querySelector<HTMLImageElement>("#previewImage");
 
-if (!fileInput || !sizesInput || !convertButton || !statusText) {
+if (!fileInput || !sizesInput || !convertButton || !statusText || !previewWrap || !previewImage) {
   throw new Error("필수 DOM 요소를 찾을 수 없습니다.");
 }
 
@@ -15,9 +17,47 @@ const fileInputEl = fileInput;
 const sizesInputEl = sizesInput;
 const convertButtonEl = convertButton;
 const statusParagraph = statusText;
+const previewWrapEl = previewWrap;
+const previewImageEl = previewImage;
+
+let previewObjectUrl: string | null = null;
 
 function setStatus(message: string): void {
   statusParagraph.textContent = message;
+}
+
+function revokePreviewUrl(): void {
+  if (previewObjectUrl) {
+    URL.revokeObjectURL(previewObjectUrl);
+    previewObjectUrl = null;
+  }
+}
+
+function syncSelectedFile(): void {
+  const file = fileInputEl.files?.[0];
+  if (!file) {
+    revokePreviewUrl();
+    previewImageEl.onerror = null;
+    previewImageEl.removeAttribute("src");
+    previewImageEl.alt = "";
+    previewWrapEl.hidden = true;
+    setStatus("");
+    return;
+  }
+
+  revokePreviewUrl();
+  previewObjectUrl = URL.createObjectURL(file);
+  previewImageEl.alt = file.name;
+  previewImageEl.onerror = () => {
+    previewImageEl.onerror = null;
+    revokePreviewUrl();
+    previewImageEl.removeAttribute("src");
+    previewWrapEl.hidden = true;
+    setStatus(`선택됨: ${file.name} — 미리보기를 표시할 수 없습니다.`);
+  };
+  previewWrapEl.hidden = false;
+  previewImageEl.src = previewObjectUrl;
+  setStatus(`선택됨: ${file.name}`);
 }
 
 function parseSizes(raw: string): number[] {
@@ -159,16 +199,13 @@ if (dropZone) {
     const file = event.dataTransfer?.files[0];
     if (file) {
       assignFileToInput(file);
-      setStatus(`선택됨: ${file.name}`);
+      syncSelectedFile();
     }
   });
 }
 
 fileInputEl.addEventListener("change", () => {
-  const file = fileInputEl.files?.[0];
-  if (file) {
-    setStatus(`선택됨: ${file.name}`);
-  }
+  syncSelectedFile();
 });
 
 convertButtonEl.addEventListener("click", async () => {
