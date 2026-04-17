@@ -1,63 +1,195 @@
 import { buildIcoFromPngChunks } from "../../../packages/core/src/index";
+import {
+  applyRasterEdits,
+  DEFAULT_MAX_PROCESSING_DIMENSION,
+  rasterizeToMaxDimension,
+  type RasterEditOptions,
+  type Rgb
+} from "./imageOps";
 import "./style.css";
 
-const fileInput = document.querySelector<HTMLInputElement>("#fileInput");
-const sizesInput = document.querySelector<HTMLInputElement>("#sizesInput");
-const convertButton = document.querySelector<HTMLButtonElement>("#convertButton");
-const statusText = document.querySelector<HTMLParagraphElement>("#statusText");
-const dropZone = document.querySelector<HTMLElement>("#dropZone");
-const previewWrap = document.querySelector<HTMLElement>("#previewWrap");
-const previewImage = document.querySelector<HTMLImageElement>("#previewImage");
-
-if (!fileInput || !sizesInput || !convertButton || !statusText || !previewWrap || !previewImage) {
-  throw new Error("필수 DOM 요소를 찾을 수 없습니다.");
+function nn<T extends HTMLElement>(el: T | null, label: string): T {
+  if (!el) {
+    throw new Error(`필수 DOM 요소를 찾을 수 없습니다: ${label}`);
+  }
+  return el;
 }
 
-const fileInputEl = fileInput;
-const sizesInputEl = sizesInput;
-const convertButtonEl = convertButton;
-const statusParagraph = statusText;
-const previewWrapEl = previewWrap;
-const previewImageEl = previewImage;
+const fileInputEl = nn(document.querySelector<HTMLInputElement>("#fileInput"), "fileInput");
+const sizesInputEl = nn(document.querySelector<HTMLInputElement>("#sizesInput"), "sizesInput");
+const convertButtonEl = nn(document.querySelector<HTMLButtonElement>("#convertButton"), "convertButton");
+const statusParagraph = nn(document.querySelector<HTMLParagraphElement>("#statusText"), "statusText");
+const dropZone = document.querySelector<HTMLElement>("#dropZone");
+const previewWrapEl = nn(document.querySelector<HTMLElement>("#previewWrap"), "previewWrap");
+const previewCanvasEl = nn(document.querySelector<HTMLCanvasElement>("#previewCanvas"), "previewCanvas");
+const transparentEnabledEl = nn(
+  document.querySelector<HTMLInputElement>("#transparentEnabled"),
+  "transparentEnabled"
+);
+const seedAutoEl = nn(document.querySelector<HTMLInputElement>("#seedAuto"), "seedAuto");
+const seedManualEl = nn(document.querySelector<HTMLInputElement>("#seedManual"), "seedManual");
+const seedColorEl = nn(document.querySelector<HTMLInputElement>("#seedColor"), "seedColor");
+const toleranceEl = nn(document.querySelector<HTMLInputElement>("#tolerance"), "tolerance");
+const toleranceOut = nn(document.querySelector<HTMLOutputElement>("#toleranceOut"), "toleranceOut");
+const minAlphaForMatchEl = nn(
+  document.querySelector<HTMLInputElement>("#minAlphaForMatch"),
+  "minAlphaForMatch"
+);
+const minAlphaOut = nn(document.querySelector<HTMLOutputElement>("#minAlphaOut"), "minAlphaOut");
+const cropEnabledEl = nn(document.querySelector<HTMLInputElement>("#cropEnabled"), "cropEnabled");
+const paddingPxEl = nn(document.querySelector<HTMLInputElement>("#paddingPx"), "paddingPx");
+const scalePercentEl = nn(document.querySelector<HTMLInputElement>("#scalePercent"), "scalePercent");
+const scaleOut = nn(document.querySelector<HTMLOutputElement>("#scaleOut"), "scaleOut");
 
-let previewObjectUrl: string | null = null;
+let sourceRasterCanvas: HTMLCanvasElement | null = null;
+let loadGeneration = 0;
+let previewDebounceTimer: number | null = null;
 
 function setStatus(message: string): void {
   statusParagraph.textContent = message;
 }
 
-function revokePreviewUrl(): void {
-  if (previewObjectUrl) {
-    URL.revokeObjectURL(previewObjectUrl);
-    previewObjectUrl = null;
+function hexToRgb(hex: string): Rgb {
+  const normalized = hex.replace("#", "").trim();
+  const expanded =
+    normalized.length === 3
+      ? normalized
+          .split("")
+          .map((c) => c + c)
+          .join("")
+      : normalized;
+  const n = Number.parseInt(expanded, 16);
+  if (!Number.isFinite(n) || expanded.length !== 6) {
+    return { r: 255, g: 255, b: 255 };
   }
+  return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
 }
 
-function syncSelectedFile(): void {
+function readEditOptions(): RasterEditOptions {
+  const transparentEnabled = transparentEnabledEl.checked;
+  const seedManual = seedManualEl.checked;
+  const seedRgb = seedManual ? hexToRgb(seedColorEl.value) : null;
+  const tolerance = Number.parseInt(toleranceEl.value, 10);
+  const minAlphaForMatch = Number.parseInt(minAlphaForMatchEl.value, 10);
+  const cropEnabled = cropEnabledEl.checked;
+  const paddingPx = Number.parseInt(paddingPxEl.value, 10);
+  const scalePct = Number.parseInt(scalePercentEl.value, 10);
+  return {
+    transparentEnabled,
+    seedManual,
+    seedRgb,
+    tolerance: Number.isFinite(tolerance) ? tolerance : 32,
+    minAlphaForMatch: Number.isFinite(minAlphaForMatch) ? Math.min(255, Math.max(1, minAlphaForMatch)) : 128,
+    cropEnabled,
+    paddingPx: Number.isFinite(paddingPx) ? Math.min(256, Math.max(0, paddingPx)) : 0,
+    scale: Math.min(2, Math.max(0.5, (Number.isFinite(scalePct) ? scalePct : 100) / 100))
+  };
+}
+
+function syncSeedColorEnabled(): void {
+  seedColorEl.disabled = seedAutoEl.checked;
+}
+
+function syncRangeOutputs(): void {
+  toleranceOut.textContent = toleranceEl.value;
+  minAlphaOut.textContent = minAlphaForMatchEl.value;
+  scaleOut.textContent = scalePercentEl.value;
+}
+
+function schedulePreview(): void {
+  if (previewDebounceTimer !== null) {
+    window.clearTimeout(previewDebounceTimer);
+  }
+  previewDebounceTimer = window.setTimeout(() => {
+    previewDebounceTimer = null;
+    void runPreview();
+  }, 90);
+}
+
+function runPreview(): void {
+  if (!sourceRasterCanvas) {
+    return;
+  }
+  const opts = readEditOptions();
+  const out = applyRasterEdits(sourceRasterCanvas, opts);
+  const rw = out.width;
+  const rh = out.height;
+  const maxPreviewSide = 280;
+  const displayScale = Math.min(1, maxPreviewSide / Math.max(rw, rh));
+  const dw = Math.max(1, Math.round(rw * displayScale));
+  const dh = Math.max(1, Math.round(rh * displayScale));
+  const side = Math.max(dw, dh);
+  previewCanvasEl.width = side;
+  previewCanvasEl.height = side;
+  const ctx = previewCanvasEl.getContext("2d");
+  if (!ctx) {
+    return;
+  }
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+  ctx.clearRect(0, 0, side, side);
+  const dx = Math.floor((side - dw) / 2);
+  const dy = Math.floor((side - dh) / 2);
+  ctx.drawImage(out, 0, 0, rw, rh, dx, dy, dw, dh);
+}
+
+type LoadRasterResult =
+  | { ok: true; wasDownscaled: boolean }
+  | { ok: false };
+
+async function loadRasterSource(file: File): Promise<LoadRasterResult> {
+  const generation = (loadGeneration += 1);
+  const decoded = await decodeImageFile(file);
+  const originalMax = Math.max(decoded.width, decoded.height);
+  let canvas: HTMLCanvasElement;
+  try {
+    canvas = rasterizeToMaxDimension(
+      decoded.width,
+      decoded.height,
+      (ctx, dw, dh) => {
+        decoded.draw(ctx, 0, 0, dw, dh);
+      },
+      DEFAULT_MAX_PROCESSING_DIMENSION
+    );
+  } finally {
+    decoded.dispose();
+  }
+  if (generation !== loadGeneration) {
+    return { ok: false };
+  }
+  sourceRasterCanvas = canvas;
+  return { ok: true, wasDownscaled: originalMax > DEFAULT_MAX_PROCESSING_DIMENSION };
+}
+
+async function onFileSelectionChanged(): Promise<void> {
   const file = fileInputEl.files?.[0];
   if (!file) {
-    revokePreviewUrl();
-    previewImageEl.onerror = null;
-    previewImageEl.removeAttribute("src");
-    previewImageEl.alt = "";
+    loadGeneration += 1;
+    sourceRasterCanvas = null;
     previewWrapEl.hidden = true;
     setStatus("");
     return;
   }
 
-  revokePreviewUrl();
-  previewObjectUrl = URL.createObjectURL(file);
-  previewImageEl.alt = file.name;
-  previewImageEl.onerror = () => {
-    previewImageEl.onerror = null;
-    revokePreviewUrl();
-    previewImageEl.removeAttribute("src");
+  previewWrapEl.hidden = true;
+  setStatus("이미지 처리 중...");
+  try {
+    const loaded = await loadRasterSource(file);
+    if (!loaded.ok) {
+      return;
+    }
+    previewWrapEl.hidden = false;
+    syncRangeOutputs();
+    syncSeedColorEnabled();
+    schedulePreview();
+    const note = loaded.wasDownscaled ? " — 편집은 긴 변 기준 최대 4096px로 처리됩니다." : "";
+    setStatus(`선택됨: ${file.name}${note}`);
+  } catch (error) {
+    sourceRasterCanvas = null;
     previewWrapEl.hidden = true;
-    setStatus(`선택됨: ${file.name} — 미리보기를 표시할 수 없습니다.`);
-  };
-  previewWrapEl.hidden = false;
-  previewImageEl.src = previewObjectUrl;
-  setStatus(`선택됨: ${file.name}`);
+    const message = error instanceof Error ? error.message : "알 수 없는 오류";
+    setStatus(`선택됨: ${file.name} — 실패: ${message}`);
+  }
 }
 
 function parseSizes(raw: string): number[] {
@@ -84,9 +216,6 @@ type DecodedImage = {
   dispose: () => void;
 };
 
-/**
- * createImageBitmap이 실패하는 일부 MIME/확장자는 <img> 로딩으로 재시도합니다.
- */
 async function decodeImageFile(file: File): Promise<DecodedImage> {
   try {
     const bitmap = await createImageBitmap(file);
@@ -199,35 +328,83 @@ if (dropZone) {
     const file = event.dataTransfer?.files[0];
     if (file) {
       assignFileToInput(file);
-      syncSelectedFile();
+      void onFileSelectionChanged();
     }
   });
 }
 
 fileInputEl.addEventListener("change", () => {
-  syncSelectedFile();
+  void onFileSelectionChanged();
+});
+
+const editControls = [
+  transparentEnabledEl,
+  seedAutoEl,
+  seedManualEl,
+  seedColorEl,
+  toleranceEl,
+  minAlphaForMatchEl,
+  cropEnabledEl,
+  paddingPxEl,
+  scalePercentEl
+];
+
+for (const el of editControls) {
+  el.addEventListener("input", () => {
+    syncRangeOutputs();
+    schedulePreview();
+  });
+  el.addEventListener("change", () => {
+    syncRangeOutputs();
+    schedulePreview();
+  });
+}
+
+seedAutoEl.addEventListener("change", () => {
+  syncSeedColorEnabled();
+  schedulePreview();
+});
+seedManualEl.addEventListener("change", () => {
+  syncSeedColorEnabled();
+  schedulePreview();
 });
 
 convertButtonEl.addEventListener("click", async () => {
   try {
+    if (!sourceRasterCanvas) {
+      throw new Error("먼저 이미지를 선택하세요.");
+    }
     const file = fileInputEl.files?.[0];
     if (!file) {
       throw new Error("먼저 이미지를 선택하세요.");
     }
     setStatus("변환 중...");
     const sizes = parseSizes(sizesInputEl.value);
-    const decoded = await decodeImageFile(file);
+    const opts = readEditOptions();
+    const editedCanvas = applyRasterEdits(sourceRasterCanvas, opts);
+    const decodedFromEdit: DecodedImage = {
+      width: editedCanvas.width,
+      height: editedCanvas.height,
+      draw(ctx, dx, dy, dw, dh) {
+        ctx.drawImage(editedCanvas, dx, dy, dw, dh);
+      },
+      dispose() {}
+    };
     try {
-      const chunks = await Promise.all(sizes.map((size) => buildPngChunkFromDecoded(decoded, size)));
+      const chunks = await Promise.all(sizes.map((size) => buildPngChunkFromDecoded(decodedFromEdit, size)));
       const ico = buildIcoFromPngChunks(chunks);
       const outputName = `${file.name.replace(/\.[^/.]+$/, "") || "favicon"}.ico`;
       triggerDownload(ico, outputName);
       setStatus(`완료: ${outputName}`);
     } finally {
-      decoded.dispose();
+      decodedFromEdit.dispose();
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : "알 수 없는 오류";
     setStatus(`실패: ${message}`);
   }
 });
+
+previewWrapEl.hidden = true;
+syncSeedColorEnabled();
+syncRangeOutputs();

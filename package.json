@@ -6,7 +6,7 @@
   "packageManager": "pnpm@10.6.5",
   "scripts": {
     "build": "pnpm -r build",
-    "test": "pnpm --filter @img2ico/core test && pnpm --filter @img2ico/cli test",
+    "test": "pnpm --filter @img2ico/core test && pnpm --filter @img2ico/cli test && pnpm --filter @img2ico/web test",
     "dev": "pnpm --filter @img2ico/web dev"
   }
 }
