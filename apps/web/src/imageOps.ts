@@ -192,12 +192,16 @@ export function copyImageDataRegion(
  * 직사각형 RGBA를 투명 패딩으로 정사각(side=max(w,h)) 버퍼에 넣고 중앙 정렬합니다(테스트·브라우저 공용).
  */
 export function padRectRgbaToSquareBuffer(
-  data: Uint8ClampedArray,
+  data: Uint8ClampedArray<ArrayBufferLike>,
   width: number,
   height: number
-): { buffer: Uint8ClampedArray; side: number } {
+): { buffer: Uint8ClampedArray<ArrayBuffer>; side: number } {
   if (width === height) {
-    return { buffer: new Uint8ClampedArray(data), side: width };
+    const cloned = new Uint8ClampedArray(width * height * 4);
+    for (let i = 0; i < data.length; i += 1) {
+      cloned[i] = data[i]!;
+    }
+    return { buffer: cloned, side: width };
   }
   const side = Math.max(width, height);
   const out = new Uint8ClampedArray(side * side * 4);
@@ -211,12 +215,24 @@ export function padRectRgbaToSquareBuffer(
   return { buffer: out, side };
 }
 
+export function imageDataFromRgbaBuffer(
+  data: Uint8ClampedArray<ArrayBufferLike>,
+  width: number,
+  height: number
+): ImageData {
+  const imageData = new ImageData(width, height);
+  for (let i = 0; i < data.length; i += 1) {
+    imageData.data[i] = data[i]!;
+  }
+  return imageData;
+}
+
 /**
  * 직사각형 RGBA 버퍼를 투명 패딩으로 정사각(side=max(w,h))에 넣고 중앙 정렬합니다.
  */
 export function padRectRgbaToSquare(data: Uint8ClampedArray, width: number, height: number): ImageData {
   const { buffer, side } = padRectRgbaToSquareBuffer(data, width, height);
-  return new ImageData(buffer, side, side);
+  return imageDataFromRgbaBuffer(buffer, side, side);
 }
 
 export function imageDataToCanvas(imageData: ImageData): HTMLCanvasElement {
@@ -250,6 +266,28 @@ export function scaleCanvas(source: HTMLCanvasElement, scale: number): HTMLCanva
   return canvas;
 }
 
+export function scaleCanvasAroundCenter(source: HTMLCanvasElement, scale: number): HTMLCanvasElement {
+  if (scale === 1 || !Number.isFinite(scale)) {
+    return source;
+  }
+  const canvas = document.createElement("canvas");
+  canvas.width = source.width;
+  canvas.height = source.height;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    throw new Error("Canvas 2D 컨텍스트를 만들 수 없습니다.");
+  }
+  const dw = Math.max(1, Math.round(source.width * scale));
+  const dh = Math.max(1, Math.round(source.height * scale));
+  const dx = Math.floor((source.width - dw) / 2);
+  const dy = Math.floor((source.height - dh) / 2);
+  ctx.clearRect(0, 0, source.width, source.height);
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(source, 0, 0, source.width, source.height, dx, dy, dw, dh);
+  return canvas;
+}
+
 export type RasterEditOptions = {
   transparentEnabled: boolean;
   seedManual: boolean;
@@ -279,7 +317,7 @@ export function applyRasterEdits(sourceCanvas: HTMLCanvasElement, options: Raste
     }
     cctx.drawImage(sourceCanvas, 0, 0);
     if (options.scale !== 1 && Number.isFinite(options.scale)) {
-      return scaleCanvas(clone, options.scale);
+      return scaleCanvasAroundCenter(clone, options.scale);
     }
     return clone;
   }
@@ -323,9 +361,9 @@ export function applyRasterEdits(sourceCanvas: HTMLCanvasElement, options: Raste
     }
   }
 
-  let canvas = imageDataToCanvas(new ImageData(workData, workW, workH));
+  let canvas = imageDataToCanvas(imageDataFromRgbaBuffer(workData, workW, workH));
   if (options.scale !== 1 && Number.isFinite(options.scale)) {
-    canvas = scaleCanvas(canvas, options.scale);
+    canvas = scaleCanvasAroundCenter(canvas, options.scale);
   }
   return canvas;
 }

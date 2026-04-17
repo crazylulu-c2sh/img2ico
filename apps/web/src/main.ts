@@ -75,6 +75,9 @@ onLocaleChange(() => {
 let sourceRasterCanvas: HTMLCanvasElement | null = null;
 let loadGeneration = 0;
 let previewDebounceTimer: number | null = null;
+let immediatePreviewQueued = false;
+const EDIT_PREVIEW_DEBOUNCE_MS = 45;
+const PREVIEW_CANVAS_SIDE = 280;
 
 function hexToRgb(hex: string): Rgb {
   const normalized = hex.replace("#", "").trim();
@@ -123,14 +126,44 @@ function syncRangeOutputs(): void {
   scaleOut.textContent = scalePercentEl.value;
 }
 
-function schedulePreview(): void {
+function cancelScheduledPreview(): void {
   if (previewDebounceTimer !== null) {
     window.clearTimeout(previewDebounceTimer);
+    previewDebounceTimer = null;
   }
+}
+
+function schedulePreviewNow(): void {
+  cancelScheduledPreview();
+  // input/change가 같은 틱에 연달아 발생해도 프리뷰는 한 번만 그린다.
+  if (immediatePreviewQueued) {
+    return;
+  }
+  immediatePreviewQueued = true;
+  queueMicrotask(() => {
+    immediatePreviewQueued = false;
+    runPreview();
+  });
+}
+
+function schedulePreviewDebounced(): void {
+  cancelScheduledPreview();
   previewDebounceTimer = window.setTimeout(() => {
     previewDebounceTimer = null;
-    void runPreview();
-  }, 90);
+    runPreview();
+  }, EDIT_PREVIEW_DEBOUNCE_MS);
+}
+
+function schedulePreviewFromEdit(mode: "immediate" | "debounced"): void {
+  if (mode === "immediate") {
+    schedulePreviewNow();
+    return;
+  }
+  schedulePreviewDebounced();
+}
+
+function schedulePreviewAfterSourceLoad(): void {
+  schedulePreviewNow();
 }
 
 function runPreview(): void {
@@ -141,22 +174,23 @@ function runPreview(): void {
   const out = applyRasterEdits(sourceRasterCanvas, opts);
   const rw = out.width;
   const rh = out.height;
-  const maxPreviewSide = 280;
-  const displayScale = Math.min(1, maxPreviewSide / Math.max(rw, rh));
-  const dw = Math.max(1, Math.round(rw * displayScale));
-  const dh = Math.max(1, Math.round(rh * displayScale));
-  const side = Math.max(dw, dh);
-  previewCanvasEl.width = side;
-  previewCanvasEl.height = side;
+  const basePreviewScale = Math.min(
+    1,
+    PREVIEW_CANVAS_SIDE / Math.max(sourceRasterCanvas.width, sourceRasterCanvas.height)
+  );
+  const dw = Math.max(1, Math.round(rw * basePreviewScale));
+  const dh = Math.max(1, Math.round(rh * basePreviewScale));
+  previewCanvasEl.width = PREVIEW_CANVAS_SIDE;
+  previewCanvasEl.height = PREVIEW_CANVAS_SIDE;
   const ctx = previewCanvasEl.getContext("2d");
   if (!ctx) {
     return;
   }
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = "high";
-  ctx.clearRect(0, 0, side, side);
-  const dx = Math.floor((side - dw) / 2);
-  const dy = Math.floor((side - dh) / 2);
+  ctx.clearRect(0, 0, PREVIEW_CANVAS_SIDE, PREVIEW_CANVAS_SIDE);
+  const dx = Math.floor((PREVIEW_CANVAS_SIDE - dw) / 2);
+  const dy = Math.floor((PREVIEW_CANVAS_SIDE - dh) / 2);
   ctx.drawImage(out, 0, 0, rw, rh, dx, dy, dw, dh);
 }
 
@@ -208,7 +242,7 @@ async function onFileSelectionChanged(): Promise<void> {
     previewWrapEl.hidden = false;
     syncRangeOutputs();
     syncSeedColorEnabled();
-    schedulePreview();
+    schedulePreviewAfterSourceLoad();
     const note = loaded.wasDownscaled ? t("status.downscaledNote") : "";
     setStatusMessage("status.selected", { name: file.name, note });
   } catch (error) {
@@ -359,37 +393,32 @@ fileInputEl.addEventListener("change", () => {
   void onFileSelectionChanged();
 });
 
-const editControls = [
-  transparentEnabledEl,
-  seedAutoEl,
-  seedManualEl,
-  seedColorEl,
-  toleranceEl,
-  minAlphaForMatchEl,
-  cropEnabledEl,
-  paddingPxEl,
-  scalePercentEl
-];
+function onEditControlChanged(mode: "immediate" | "debounced"): void {
+  syncRangeOutputs();
+  syncSeedColorEnabled();
+  schedulePreviewFromEdit(mode);
+}
 
-for (const el of editControls) {
+const continuousEditControls = [toleranceEl, minAlphaForMatchEl, paddingPxEl, scalePercentEl];
+const immediateEditControls = [transparentEnabledEl, seedAutoEl, seedManualEl, seedColorEl, cropEnabledEl];
+
+for (const el of continuousEditControls) {
   el.addEventListener("input", () => {
-    syncRangeOutputs();
-    schedulePreview();
+    onEditControlChanged("debounced");
   });
   el.addEventListener("change", () => {
-    syncRangeOutputs();
-    schedulePreview();
+    onEditControlChanged("immediate");
   });
 }
 
-seedAutoEl.addEventListener("change", () => {
-  syncSeedColorEnabled();
-  schedulePreview();
-});
-seedManualEl.addEventListener("change", () => {
-  syncSeedColorEnabled();
-  schedulePreview();
-});
+for (const el of immediateEditControls) {
+  el.addEventListener("input", () => {
+    onEditControlChanged("immediate");
+  });
+  el.addEventListener("change", () => {
+    onEditControlChanged("immediate");
+  });
+}
 
 convertButtonEl.addEventListener("click", async () => {
   try {
