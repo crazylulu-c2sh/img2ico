@@ -6,11 +6,18 @@ import {
   type RasterEditOptions,
   type Rgb
 } from "./imageOps";
+import { initI18n, onLocaleChange, t } from "./i18n";
 import "./style.css";
+
+type StatusModel =
+  | { kind: "empty" }
+  | { kind: "i18n"; key: string; vars?: Record<string, string | number> };
+
+let statusModel: StatusModel = { kind: "empty" };
 
 function nn<T extends HTMLElement>(el: T | null, label: string): T {
   if (!el) {
-    throw new Error(`필수 DOM 요소를 찾을 수 없습니다: ${label}`);
+    throw new Error(t("errors.missingDom", { label }));
   }
   return el;
 }
@@ -19,6 +26,25 @@ const fileInputEl = nn(document.querySelector<HTMLInputElement>("#fileInput"), "
 const sizesInputEl = nn(document.querySelector<HTMLInputElement>("#sizesInput"), "sizesInput");
 const convertButtonEl = nn(document.querySelector<HTMLButtonElement>("#convertButton"), "convertButton");
 const statusParagraph = nn(document.querySelector<HTMLParagraphElement>("#statusText"), "statusText");
+
+function paintStatus(): void {
+  if (statusModel.kind === "empty") {
+    statusParagraph.textContent = "";
+    return;
+  }
+  statusParagraph.textContent = t(statusModel.key, statusModel.vars);
+}
+
+function setStatusMessage(key: string, vars?: Record<string, string | number>): void {
+  statusModel = { kind: "i18n", key, vars };
+  paintStatus();
+}
+
+function clearStatus(): void {
+  statusModel = { kind: "empty" };
+  paintStatus();
+}
+
 const dropZone = document.querySelector<HTMLElement>("#dropZone");
 const previewWrapEl = nn(document.querySelector<HTMLElement>("#previewWrap"), "previewWrap");
 const previewCanvasEl = nn(document.querySelector<HTMLCanvasElement>("#previewCanvas"), "previewCanvas");
@@ -41,13 +67,14 @@ const paddingPxEl = nn(document.querySelector<HTMLInputElement>("#paddingPx"), "
 const scalePercentEl = nn(document.querySelector<HTMLInputElement>("#scalePercent"), "scalePercent");
 const scaleOut = nn(document.querySelector<HTMLOutputElement>("#scaleOut"), "scaleOut");
 
+initI18n();
+onLocaleChange(() => {
+  paintStatus();
+});
+
 let sourceRasterCanvas: HTMLCanvasElement | null = null;
 let loadGeneration = 0;
 let previewDebounceTimer: number | null = null;
-
-function setStatus(message: string): void {
-  statusParagraph.textContent = message;
-}
 
 function hexToRgb(hex: string): Rgb {
   const normalized = hex.replace("#", "").trim();
@@ -167,12 +194,12 @@ async function onFileSelectionChanged(): Promise<void> {
     loadGeneration += 1;
     sourceRasterCanvas = null;
     previewWrapEl.hidden = true;
-    setStatus("");
+    clearStatus();
     return;
   }
 
   previewWrapEl.hidden = true;
-  setStatus("이미지 처리 중...");
+  setStatusMessage("status.processing");
   try {
     const loaded = await loadRasterSource(file);
     if (!loaded.ok) {
@@ -182,13 +209,13 @@ async function onFileSelectionChanged(): Promise<void> {
     syncRangeOutputs();
     syncSeedColorEnabled();
     schedulePreview();
-    const note = loaded.wasDownscaled ? " — 편집은 긴 변 기준 최대 4096px로 처리됩니다." : "";
-    setStatus(`선택됨: ${file.name}${note}`);
+    const note = loaded.wasDownscaled ? t("status.downscaledNote") : "";
+    setStatusMessage("status.selected", { name: file.name, note });
   } catch (error) {
     sourceRasterCanvas = null;
     previewWrapEl.hidden = true;
-    const message = error instanceof Error ? error.message : "알 수 없는 오류";
-    setStatus(`선택됨: ${file.name} — 실패: ${message}`);
+    const message = error instanceof Error ? error.message : t("errors.unknown");
+    setStatusMessage("status.loadFailed", { name: file.name, message });
   }
 }
 
@@ -199,11 +226,11 @@ function parseSizes(raw: string): number[] {
     .filter((value) => Number.isInteger(value));
 
   if (sizes.length === 0) {
-    throw new Error("해상도 목록을 입력하세요. 예: 16,32,48,256");
+    throw new Error(t("errors.sizesEmpty"));
   }
   for (const size of sizes) {
     if (size < 1 || size > 256) {
-      throw new Error(`지원하지 않는 크기(${size})입니다. 1~256 범위만 허용됩니다.`);
+      throw new Error(t("errors.sizeRange", { size }));
     }
   }
   return Array.from(new Set(sizes));
@@ -236,18 +263,13 @@ async function decodeImageFile(file: File): Promise<DecodedImage> {
       img.decoding = "async";
       await new Promise<void>((resolve, reject) => {
         img.onload = () => resolve();
-        img.onerror = () =>
-          reject(
-            new Error(
-              "이 파일을 디코딩할 수 없습니다. 다른 브라우저를 쓰거나 CLI(Sharp)로 변환해 보세요."
-            )
-          );
+        img.onerror = () => reject(new Error(t("errors.decodeFile")));
         img.src = url;
       });
       const width = img.naturalWidth;
       const height = img.naturalHeight;
       if (width === 0 || height === 0) {
-        throw new Error("이미지 크기를 읽을 수 없습니다.");
+        throw new Error(t("errors.imageSizeRead"));
       }
       return {
         width,
@@ -270,7 +292,7 @@ async function canvasToPngBytes(canvas: HTMLCanvasElement): Promise<Uint8Array> 
         resolve(result);
         return;
       }
-      reject(new Error("PNG 변환에 실패했습니다."));
+      reject(new Error(t("errors.pngConvert")));
     }, "image/png");
   });
 
@@ -284,7 +306,7 @@ async function buildPngChunkFromDecoded(source: DecodedImage, size: number): Pro
   canvas.height = size;
   const ctx = canvas.getContext("2d");
   if (!ctx) {
-    throw new Error("Canvas 2D 컨텍스트를 만들 수 없습니다.");
+    throw new Error(t("errors.canvas2d"));
   }
 
   const scale = Math.min(size / source.width, size / source.height);
@@ -372,13 +394,13 @@ seedManualEl.addEventListener("change", () => {
 convertButtonEl.addEventListener("click", async () => {
   try {
     if (!sourceRasterCanvas) {
-      throw new Error("먼저 이미지를 선택하세요.");
+      throw new Error(t("errors.pickImage"));
     }
     const file = fileInputEl.files?.[0];
     if (!file) {
-      throw new Error("먼저 이미지를 선택하세요.");
+      throw new Error(t("errors.pickImage"));
     }
-    setStatus("변환 중...");
+    setStatusMessage("status.converting");
     const sizes = parseSizes(sizesInputEl.value);
     const opts = readEditOptions();
     const editedCanvas = applyRasterEdits(sourceRasterCanvas, opts);
@@ -395,13 +417,13 @@ convertButtonEl.addEventListener("click", async () => {
       const ico = buildIcoFromPngChunks(chunks);
       const outputName = `${file.name.replace(/\.[^/.]+$/, "") || "favicon"}.ico`;
       triggerDownload(ico, outputName);
-      setStatus(`완료: ${outputName}`);
+      setStatusMessage("status.done", { name: outputName });
     } finally {
       decodedFromEdit.dispose();
     }
   } catch (error) {
-    const message = error instanceof Error ? error.message : "알 수 없는 오류";
-    setStatus(`실패: ${message}`);
+    const message = error instanceof Error ? error.message : t("errors.unknown");
+    setStatusMessage("status.failed", { message });
   }
 });
 

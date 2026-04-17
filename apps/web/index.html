@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ko">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,79 +8,117 @@
   <body>
     <main class="container">
       <div class="title-row">
-        <h1>img2ico</h1>
+        <div class="title-row-start">
+          <h1 class="title-brand">img2ico</h1>
+          <div class="locale-wrap">
+            <span class="locale-globe" aria-hidden="true">🌐</span>
+            <select
+              id="localeSelect"
+              class="locale-select"
+              data-i18n-aria-label="locale.selectAria"
+              aria-label="Display language"
+            >
+              <option value="ko">🇰🇷 한국어</option>
+              <option value="en">🇺🇸 English</option>
+              <option value="ja">🇯🇵 日本語</option>
+            </select>
+          </div>
+        </div>
         <p class="repo-link">
-          <a href="https://github.com/crazylulu-c2sh/img2ico" target="_blank" rel="noopener noreferrer">GitHub 저장소</a>
+          <a href="https://github.com/crazylulu-c2sh/img2ico" target="_blank" rel="noopener noreferrer" data-i18n="ui.github"
+            >GitHub repository</a
+          >
         </p>
       </div>
-      <p>
-        브라우저가 디코드할 수 있는 이미지를 파비콘용 멀티 해상도 ICO로 변환합니다. (PNG, JPEG, WebP, GIF, BMP, SVG,
-        AVIF, HEIC 등은 브라우저·OS에 따라 다릅니다.)
+      <p data-i18n="ui.intro">
+        Convert images your browser can decode into a multi-resolution favicon ICO. (PNG, JPEG, WebP, GIF, BMP, SVG, AVIF,
+        HEIC, etc. depend on browser and OS.)
       </p>
-      <div id="dropZone" class="drop-zone" tabindex="0" aria-label="이미지를 여기에 놓기">
+      <div
+        id="dropZone"
+        class="drop-zone"
+        tabindex="0"
+        data-i18n-aria-label="ui.dropAria"
+        aria-label="Drop image here"
+      >
         <label class="input-group">
-          <span>이미지 선택</span>
+          <span data-i18n="ui.chooseImage">Choose image</span>
           <input id="fileInput" type="file" accept="image/*,.heic,.heif" />
         </label>
-        <p class="hint">또는 파일을 이 영역으로 드래그해 놓으세요.</p>
+        <p class="hint" data-i18n="ui.dragHint">Or drag and drop a file onto this area.</p>
       </div>
       <figure class="preview" id="previewWrap" hidden>
-        <figcaption class="preview-caption">편집 미리보기</figcaption>
+        <figcaption class="preview-caption" data-i18n="ui.previewCaption">Edit preview</figcaption>
         <div class="preview-canvas-wrap" aria-hidden="true">
-          <canvas id="previewCanvas" role="img" aria-label="편집 미리보기"></canvas>
+          <canvas
+            id="previewCanvas"
+            role="img"
+            data-i18n-aria-label="ui.previewCanvasAria"
+            aria-label="Edit preview"
+          ></canvas>
         </div>
         <section id="editSection" class="edit-section">
-          <h2 class="edit-heading">편집</h2>
-          <p class="edit-lead">
-            ICO로 만들기 전에만 적용됩니다. 맞추기는 콘텐츠에 맞춘 뒤 1:1 정사각으로 맞춥니다. 세부 값은 고급 설정에서
-            조절할 수 있습니다.
+          <h2 class="edit-heading" data-i18n="ui.editHeading">Edit</h2>
+          <p class="edit-lead" data-i18n="ui.editLead">
+            Applied only before building the ICO. Fit trims to content then pads to a 1:1 square. Tune details in
+            Advanced settings.
           </p>
           <div class="edit-simple-toggles">
             <label class="checkbox-row">
               <input id="transparentEnabled" type="checkbox" />
-              <span>가장자리 배경 투명화</span>
+              <span data-i18n="ui.edgeTransparent">Transparent edge background</span>
             </label>
             <label class="checkbox-row">
               <input id="cropEnabled" type="checkbox" checked />
-              <span>가장자리 맞추기 (1:1 정사각)</span>
+              <span data-i18n="ui.cropSquare">Fit to edges (1:1 square)</span>
             </label>
           </div>
           <details class="edit-advanced" id="editAdvanced">
-            <summary>고급 설정</summary>
+            <summary data-i18n="ui.advancedSummary">Advanced settings</summary>
             <div class="edit-advanced-body">
-              <p class="edit-hint">
-                가장자리에서 색이 이어진 영역을 배경으로 보고 투명 처리합니다. 배경과 로고 색이 비슷하면 일부가 지워질 수
-                있습니다. 한 변이 4096px를 넘으면 편집 전에 축소합니다.
+              <p class="edit-hint" data-i18n="ui.advancedHint">
+                Treats similarly colored regions from the edges as background and makes them transparent. If background
+                and logo colors are similar, parts may be removed. If a side exceeds 4096px, the image is downscaled
+                before editing.
               </p>
               <fieldset class="seed-fieldset">
-                <legend>배경 기준 색</legend>
+                <legend data-i18n="ui.seedLegend">Background seed color</legend>
                 <label class="radio-row">
                   <input id="seedAuto" type="radio" name="seedMode" value="auto" checked />
-                  <span>모서리 색 자동</span>
+                  <span data-i18n="ui.seedAuto">Auto from corners</span>
                 </label>
                 <label class="radio-row">
                   <input id="seedManual" type="radio" name="seedMode" value="manual" />
-                  <span>직접 지정</span>
+                  <span data-i18n="ui.seedManual">Pick manually</span>
                 </label>
                 <label class="input-group seed-color-row">
-                  <span>색상</span>
+                  <span data-i18n="ui.color">Color</span>
                   <input id="seedColor" type="color" value="#ffffff" disabled />
                 </label>
               </fieldset>
               <label class="input-group">
-                <span>색 허용 오차: <output id="toleranceOut" for="tolerance">32</output></span>
+                <span
+                  ><span data-i18n="ui.toleranceLabel">Color tolerance:</span>
+                  <output id="toleranceOut" for="tolerance">32</output></span
+                >
                 <input id="tolerance" type="range" min="0" max="80" value="32" />
               </label>
               <label class="input-group">
-                <span>배경으로 볼 최소 불투명도: <output id="minAlphaOut" for="minAlphaForMatch">128</output></span>
+                <span
+                  ><span data-i18n="ui.minAlphaLabel">Minimum opacity treated as background:</span>
+                  <output id="minAlphaOut" for="minAlphaForMatch">128</output></span
+                >
                 <input id="minAlphaForMatch" type="range" min="1" max="255" value="128" />
               </label>
               <label class="input-group">
-                <span>맞춘 뒤 패딩(px)</span>
+                <span data-i18n="ui.paddingLabel">Padding after fit (px)</span>
                 <input id="paddingPx" type="number" min="0" max="256" value="2" />
               </label>
               <label class="input-group">
-                <span>배율: <output id="scaleOut" for="scalePercent">100</output>%</span>
+                <span
+                  ><span data-i18n="ui.scaleLabel">Scale:</span> <output id="scaleOut" for="scalePercent">100</output
+                  >%</span
+                >
                 <input id="scalePercent" type="range" min="50" max="200" value="100" />
               </label>
             </div>
@@ -88,10 +126,10 @@
         </section>
       </figure>
       <label class="input-group">
-        <span>해상도 목록 (쉼표 구분)</span>
+        <span data-i18n="ui.sizesLabel">Size list (comma-separated)</span>
         <input id="sizesInput" type="text" value="16,32,48,256" />
       </label>
-      <button id="convertButton" type="button">ICO 생성</button>
+      <button id="convertButton" type="button" data-i18n="ui.convert">Build ICO</button>
       <p id="statusText" aria-live="polite"></p>
     </main>
     <script type="module" src="/src/main.ts"></script>
