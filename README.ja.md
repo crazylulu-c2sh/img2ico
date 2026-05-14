@@ -18,8 +18,9 @@ CLI と Web UI は同じ ICO 組み立てロジック（`@img2ico/core`）を共
 
 ## 要件
 
-- Node.js 20+
-- pnpm 10+（ルート `package.json` の `packageManager` に合わせた pnpm の利用を推奨します。）
+- Node.js 22+
+- pnpm 11+（ルート `package.json` の `packageManager` に合わせた pnpm の利用を推奨します。）
+- pnpm 11 を使う場合は Node.js 22 以上が必要です。
 
 ## インストール
 

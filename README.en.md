@@ -18,8 +18,9 @@ The CLI and web UI share the same ICO assembly logic (`@img2ico/core`).
 
 ## Requirements
 
-- Node.js 20+
-- pnpm 10+ (using the pnpm version pinned in the root `package.json` `packageManager` field is recommended.)
+- Node.js 22+
+- pnpm 11+ (using the pnpm version pinned in the root `package.json` `packageManager` field is recommended.)
+- Using pnpm 11 requires Node.js 22 or later.
 
 ## Install
 
