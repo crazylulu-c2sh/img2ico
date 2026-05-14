@@ -18,8 +18,9 @@ CLI와 웹 UI가 같은 ICO 조립 로직(`@img2ico/core`)을 공유합니다.
 
 ## 요구사항
 
-- Node.js 20+
-- pnpm 10+ (저장소는 `package.json`의 `packageManager` 필드에 맞춘 pnpm 버전 사용을 권장합니다.)
+- Node.js 22+
+- pnpm 11+ (저장소는 `package.json`의 `packageManager` 필드에 맞춘 pnpm 버전 사용을 권장합니다.)
+- pnpm 11을 사용할 때는 Node.js 22 이상이 필요합니다.
 
 ## 설치
 
