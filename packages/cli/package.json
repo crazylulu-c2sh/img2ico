@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@img2ico/core": "workspace:*",
-    "commander": "^14.0.3",
+    "commander": "^15.0.0",
     "sharp": "^0.34.5"
   },
   "devDependencies": {
