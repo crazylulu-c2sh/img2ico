@@ -34,11 +34,19 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Set deploy metadata
+        run: |
+          echo "VITE_DEPLOY_SHA=${{ github.sha }}" >> "$GITHUB_ENV"
+          echo "VITE_DEPLOY_TIME=${{ github.run_started_at }}" >> "$GITHUB_ENV"
+          echo "VITE_REPO_NAME=${{ github.repository }}" >> "$GITHUB_ENV"
+
+      - name: Verify deploy metadata
+        run: |
+          test -n "$VITE_DEPLOY_SHA"
+          test -n "$VITE_DEPLOY_TIME"
+          test -n "$VITE_REPO_NAME"
+
       - name: Build web app
-        env:
-          VITE_DEPLOY_SHA: ${{ github.sha }}
-          VITE_DEPLOY_TIME: "${{ github.run_started_at }}"
-          VITE_REPO_NAME: ${{ github.repository }}
         run: pnpm --filter @img2ico/web build
 
       - name: Setup Pages
