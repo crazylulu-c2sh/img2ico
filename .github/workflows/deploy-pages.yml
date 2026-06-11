@@ -37,7 +37,7 @@ jobs:
       - name: Set deploy metadata
         run: |
           echo "VITE_DEPLOY_SHA=${{ github.sha }}" >> "$GITHUB_ENV"
-          echo "VITE_DEPLOY_TIME=${{ github.run_started_at }}" >> "$GITHUB_ENV"
+          echo "VITE_DEPLOY_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> "$GITHUB_ENV"
           echo "VITE_REPO_NAME=${{ github.repository }}" >> "$GITHUB_ENV"
 
       - name: Verify deploy metadata
