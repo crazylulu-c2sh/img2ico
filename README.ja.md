@@ -5,6 +5,8 @@
 画像をファビコン用のマルチ解像度 `.ico` に変換するモノレポです。  
 CLI と Web UI は同じ ICO 組み立てロジック（`@img2ico/core`）を共有します。
 
+**Web デモ:** [https://crazylulu-c2sh.github.io/img2ico/](https://crazylulu-c2sh.github.io/img2ico/)
+
 ## モノレポ構成
 
 - **`packages/core`**: PNG チャンクから ICO バイナリを組み立てる共有ロジック。
@@ -75,6 +77,14 @@ pnpm dev
 
 ブラウザでファイルを選び、解像度リストを入力して「**ICO を生成**」ボタンを押すと `.ico` がダウンロードされます。  
 画面言語は韓国語・英語・日本語（`ko` / `en` / `ja`）に切り替えできます。
+
+## GitHub Pages デプロイ
+
+`main` への push で [`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml) が `apps/web` をビルドし、GitHub Pages に自動デプロイします。
+
+- **公開 URL:** [https://crazylulu-c2sh.github.io/img2ico/](https://crazylulu-c2sh.github.io/img2ico/)
+- デプロイ済みページの **フッター** にデプロイ日時とコミット SHA（短いハッシュ、GitHub コミットへのリンク）が表示されます。
+- ローカル開発（`pnpm dev`）や CI 以外のビルドではフッターは非表示です。
 
 ## スクリプト
 
