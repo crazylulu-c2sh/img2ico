@@ -12,6 +12,8 @@ const KO: Messages = {
   "ui.intro":
     "브라우저가 디코드할 수 있는 이미지를 파비콘용 멀티 해상도 ICO로 변환합니다. (PNG, JPEG, WebP, GIF, BMP, SVG, AVIF, HEIC 등은 브라우저·OS에 따라 다릅니다.)",
   "ui.github": "GitHub 저장소",
+  "ui.deployInfo": "배포: {{time}} · ",
+  "ui.deployCommit": "{{sha}}",
   "ui.dropAria": "이미지를 여기에 놓기",
   "ui.chooseImage": "이미지 선택",
   "ui.dragHint": "또는 파일을 이 영역으로 드래그해 놓으세요.",
@@ -59,6 +61,8 @@ const EN: Messages = {
   "ui.intro":
     "Convert images your browser can decode into a multi-resolution favicon ICO. (PNG, JPEG, WebP, GIF, BMP, SVG, AVIF, HEIC, etc. depend on browser and OS.)",
   "ui.github": "GitHub repository",
+  "ui.deployInfo": "Deployed {{time}} · ",
+  "ui.deployCommit": "{{sha}}",
   "ui.dropAria": "Drop image here",
   "ui.chooseImage": "Choose image",
   "ui.dragHint": "Or drag and drop a file onto this area.",
@@ -106,6 +110,8 @@ const JA: Messages = {
   "ui.intro":
     "ブラウザがデコードできる画像を、ファビコン用のマルチ解像度 ICO に変換します。(PNG、JPEG、WebP、GIF、BMP、SVG、AVIF、HEIC などはブラウザ・OS により異なります。)",
   "ui.github": "GitHub リポジトリ",
+  "ui.deployInfo": "デプロイ: {{time}} · ",
+  "ui.deployCommit": "{{sha}}",
   "ui.dropAria": "ここに画像をドロップ",
   "ui.chooseImage": "画像を選択",
   "ui.dragHint": "またはファイルをこの領域にドラッグ＆ドロップしてください。",

@@ -6,7 +6,15 @@ import {
   type RasterEditOptions,
   type Rgb
 } from "./imageOps";
-import { initI18n, onLocaleChange, t } from "./i18n";
+import {
+  commitUrl,
+  formatDeployTime,
+  getDeploySha,
+  getDeployTime,
+  isProductionDeploy,
+  shortSha
+} from "./buildInfo";
+import { getLocale, initI18n, onLocaleChange, t } from "./i18n";
 import "./style.css";
 
 type StatusModel =
@@ -67,9 +75,29 @@ const paddingPxEl = nn(document.querySelector<HTMLInputElement>("#paddingPx"), "
 const scalePercentEl = nn(document.querySelector<HTMLInputElement>("#scalePercent"), "scalePercent");
 const scaleOut = nn(document.querySelector<HTMLOutputElement>("#scaleOut"), "scaleOut");
 
+const deployInfoEl = document.querySelector<HTMLElement>("#deployInfo");
+const deployInfoTextEl = document.querySelector<HTMLSpanElement>("#deployInfoText");
+const deployCommitLinkEl = document.querySelector<HTMLAnchorElement>("#deployCommitLink");
+
+function paintDeployInfo(): void {
+  if (!deployInfoEl || !deployInfoTextEl || !deployCommitLinkEl || !isProductionDeploy()) {
+    deployInfoEl?.setAttribute("hidden", "");
+    return;
+  }
+
+  const sha = getDeploySha();
+  const time = formatDeployTime(getDeployTime(), getLocale());
+  deployInfoTextEl.textContent = t("ui.deployInfo", { time });
+  deployCommitLinkEl.textContent = t("ui.deployCommit", { sha: shortSha(sha) });
+  deployCommitLinkEl.href = commitUrl(sha);
+  deployInfoEl.removeAttribute("hidden");
+}
+
 initI18n();
+paintDeployInfo();
 onLocaleChange(() => {
   paintStatus();
+  paintDeployInfo();
 });
 
 let sourceRasterCanvas: HTMLCanvasElement | null = null;

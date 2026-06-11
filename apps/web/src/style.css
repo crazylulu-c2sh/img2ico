@@ -6,8 +6,10 @@
 body {
   margin: 0;
   min-height: 100vh;
-  display: grid;
-  place-items: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 
 .container {
@@ -273,4 +275,16 @@ details.edit-advanced[open] > summary::after {
 .repo-link a {
   color: LinkText;
   opacity: 0.9;
+}
+
+.deploy-info {
+  margin: 16px 0 0;
+  font-size: 13px;
+  line-height: 1.4;
+  opacity: 0.85;
+  text-align: center;
+}
+
+.deploy-info a {
+  color: LinkText;
 }
