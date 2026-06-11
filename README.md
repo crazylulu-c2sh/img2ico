@@ -5,6 +5,8 @@
 이미지를 파비콘에 쓰는 멀티 해상도 `.ico` 파일로 변환하는 모노레포 프로젝트입니다.  
 CLI와 웹 UI가 같은 ICO 조립 로직(`@img2ico/core`)을 공유합니다.
 
+**웹 데모:** [https://crazylulu-c2sh.github.io/img2ico/](https://crazylulu-c2sh.github.io/img2ico/)
+
 ## 모노레포 구조
 
 - **`packages/core`**: PNG 청크로부터 ICO 바이너리를 조립하는 공유 로직.
@@ -75,6 +77,14 @@ pnpm dev
 
 브라우저에서 파일을 선택하고 해상도 목록을 입력한 뒤 `ICO 생성` 버튼을 누르면 `.ico` 파일이 내려받아집니다.  
 화면 언어는 한국어·영어·일본어(`ko` / `en` / `ja`) 중에서 전환할 수 있습니다.
+
+## GitHub Pages 배포
+
+`main` 브랜치에 push되면 [`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml) 워크플로가 `apps/web`을 빌드한 뒤 GitHub Pages에 자동 배포합니다.
+
+- **라이브 URL:** [https://crazylulu-c2sh.github.io/img2ico/](https://crazylulu-c2sh.github.io/img2ico/)
+- 배포된 페이지 **하단 푸터**에 배포 시각과 커밋 SHA(짧은 해시, GitHub 커밋 링크)가 표시됩니다.
+- 로컬 개발 서버(`pnpm dev`)나 env 없이 빌드한 결과물에서는 푸터가 숨겨집니다.
 
 ## 스크립트
 

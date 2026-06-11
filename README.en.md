@@ -5,6 +5,8 @@
 This monorepo converts images into multi-resolution `.ico` files for favicons.  
 The CLI and web UI share the same ICO assembly logic (`@img2ico/core`).
 
+**Live demo:** [https://crazylulu-c2sh.github.io/img2ico/](https://crazylulu-c2sh.github.io/img2ico/)
+
 ## Monorepo layout
 
 - **`packages/core`**: Shared logic that assembles ICO binaries from PNG chunks.
@@ -75,6 +77,14 @@ Default URL (port `5173`): `http://localhost:5173`
 
 Pick a file in the browser, enter resolution sizes, then click the **Build ICO** button to download a `.ico` file.  
 The UI can be switched among Korean, English, and Japanese (`ko` / `en` / `ja`).
+
+## GitHub Pages deployment
+
+Pushes to `main` trigger [`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml), which builds `apps/web` and deploys to GitHub Pages.
+
+- **Live URL:** [https://crazylulu-c2sh.github.io/img2ico/](https://crazylulu-c2sh.github.io/img2ico/)
+- The **footer** on the deployed site shows the deploy time and commit SHA (short hash, linked to the GitHub commit).
+- The footer is hidden when running locally (`pnpm dev`) or when the build was not produced by CI.
 
 ## Scripts
 
