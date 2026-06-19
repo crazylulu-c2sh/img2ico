@@ -1,6 +1,10 @@
 # img2ico
 
-**Languages:** [한국어](README.md) · [日本語](README.ja.md)
+[![한국어](https://img.shields.io/badge/%ED%95%9C%EA%B5%AD%EC%96%B4-lightgrey)](README.md)
+![English](https://img.shields.io/badge/English-2ea44f)
+[![日本語](https://img.shields.io/badge/%E6%97%A5%E6%9C%AC%E8%AA%9E-lightgrey)](README.ja.md)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue)](LICENSE)
+[![Live Demo](https://img.shields.io/badge/Live_Demo-GitHub_Pages-2ea44f?logo=github&logoColor=white)](https://crazylulu-c2sh.github.io/img2ico/)
 
 This monorepo converts images into multi-resolution `.ico` files for favicons.  
 The CLI and web UI share the same ICO assembly logic (`@img2ico/core`).

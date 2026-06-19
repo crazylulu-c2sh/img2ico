@@ -1,6 +1,10 @@
 # img2ico
 
-**다른 언어:** [English](README.en.md) · [日本語](README.ja.md)
+![한국어](https://img.shields.io/badge/%ED%95%9C%EA%B5%AD%EC%96%B4-2ea44f)
+[![English](https://img.shields.io/badge/English-lightgrey)](README.en.md)
+[![日本語](https://img.shields.io/badge/%E6%97%A5%E6%9C%AC%E8%AA%9E-lightgrey)](README.ja.md)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue)](LICENSE)
+[![Live Demo](https://img.shields.io/badge/Live_Demo-GitHub_Pages-2ea44f?logo=github&logoColor=white)](https://crazylulu-c2sh.github.io/img2ico/)
 
 이미지를 파비콘에 쓰는 멀티 해상도 `.ico` 파일로 변환하는 모노레포 프로젝트입니다.  
 CLI와 웹 UI가 같은 ICO 조립 로직(`@img2ico/core`)을 공유합니다.
