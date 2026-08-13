@@ -32,6 +32,7 @@
 
 ## 검증
 - 문자열 추가·변경 후 `pnpm --filter @img2ico/web test` 및 `build`로 확인한다.
+- `vite build`는 타입을 검사하지 않으므로, 타입에 영향을 주는 변경은 `pnpm --filter @img2ico/web typecheck`(또는 루트 `pnpm typecheck`)로 별도 확인한다.
 - 로케일 결정·`t` 동작을 건드리면 [`apps/web/src/i18n.test.ts`](apps/web/src/i18n.test.ts)에 케이스를 보강한다.
 
 ## 범위 밖

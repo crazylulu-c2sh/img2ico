@@ -94,6 +94,7 @@ pnpm dev
 
 ```bash
 pnpm build
+pnpm typecheck
 pnpm test
 pnpm dev
 ```
