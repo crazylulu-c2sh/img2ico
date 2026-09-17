@@ -10,7 +10,7 @@
     "test": "vitest run"
   },
   "devDependencies": {
-    "@types/jsdom": "^28.0.3",
+    "@types/jsdom": "^30.0.0",
     "jsdom": "^30.0.1",
     "typescript": "^7.0.2",
     "vite": "^8.2.2",
