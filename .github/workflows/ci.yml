@@ -24,14 +24,11 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v7.1.0
         with:
-          node-version: 22
+          node-version: 24
           cache: pnpm
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-
-      - name: Audit dependencies
-        run: pnpm audit
 
       - name: Typecheck
         run: pnpm typecheck
@@ -41,3 +38,22 @@ jobs:
 
       - name: Test
         run: pnpm test
+
+  audit:
+    # PR에서만 실행: 배포(workflow_call)는 새 취약점 공개만으로 막히지 않게 한다.
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6.1.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7.1.0
+        with:
+          node-version: 24
+
+      - name: Audit dependencies
+        run: pnpm audit
